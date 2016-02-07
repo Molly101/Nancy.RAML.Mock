@@ -15,21 +15,20 @@ namespace RAMLNancyMock
     {
         static void Main(string[] args)
         {
-            Logger logger = LogManager.GetCurrentClassLogger();
-            HostConfiguration nancyConfig = new HostConfiguration() { RewriteLocalhost = false };
+            Logger logger = LogManager.GetCurrentClassLogger();     //NLog initiaization (via NLog.config)
             Uri nancyUri = new Uri("http://localhost:52190");   //ToDo: ramlDoc.BaseUri
             string ramlFilePath = @"F:\Project\box.raml";       //ToDo: args[1]
 
-            RAMLDocument ramlDoc = null;
+            RAMLDocument ramlDoc = null;                
             try {
                 ramlDoc = new RAMLDocument(ramlFilePath);
             }
-            catch(FileNotFoundException fnfEx)
+            catch(FileNotFoundException fnfEx)          //Incorrect RAML file path
             {
                 logger.Error(fnfEx);
                 return;
             }
-            catch(System.AggregateException aggrEx)     //Exceptions received from assync RamlParser
+            catch(AggregateException aggrEx)            //Exceptions received from assync RamlParser
             {
                 foreach (var iEx in aggrEx.InnerExceptions)
                     logger.Error($"RamlParser error: {iEx}");
@@ -38,9 +37,11 @@ namespace RAMLNancyMock
 
 
             logger.Info("URI {0}", ramlDoc.BaseUri);
+            var a = ramlDoc.Routes;
 
 
             //Starting Nancy self-hosted process
+            HostConfiguration nancyConfig = new HostConfiguration() { RewriteLocalhost = false };
             using (var host = new NancyHost(nancyConfig, nancyUri))
             {
                 host.Start();
