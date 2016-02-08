@@ -11,9 +11,9 @@ namespace RAMLNancyMock
 {
     class RAMLDocument
     {
-        private RamlDocument _ramlDocument = null;
+        private readonly RamlDocument _ramlDocument = null;
         private Uri _baseUri = null;
-        private Dictionary<string, string> _routes = null;
+        private List<Route> _routes = null;
 
         public RAMLDocument(string ramlFilePath)
         {
@@ -41,28 +41,28 @@ namespace RAMLNancyMock
             }
         }
 
-        public Dictionary<string, string> Routes
+        public IList<Route> Routes
         {
             get
             {
                 if(_routes == null)
                 {
-                   _routes = new Dictionary<string, string>(_ramlDocument.Resources.Count);
-                    _parseResources(_ramlDocument.Resources, _routes, new StringBuilder());
+                   _routes = new List<Route>();
+                    _parseResources(_ramlDocument.Resources, _routes, String.Empty);
                 }
 
-                return _routes;
+                return _routes.AsReadOnly();
             }
         }
 
-        private void _parseResources(ICollection<Resource> resources, Dictionary<string, string> dictionary, StringBuilder uriString)
+        private void _parseResources(ICollection<Resource> resources, List<Route> routesList, string baseRoute)
         {
-            foreach(var resource in resources)
+            foreach (var resource in resources)
             {
-                uriString.Append(resource.RelativeUri);
-                dictionary.Add(uriString.ToString(), "test");
+                string route = String.Concat(baseRoute, resource.RelativeUri);
+                routesList.Add(new Route(route));
                 if (resource.Resources.Count > 0)
-                    _parseResources(resource.Resources, dictionary, uriString);
+                    _parseResources(resource.Resources, routesList, route);
             }
         }
     }
