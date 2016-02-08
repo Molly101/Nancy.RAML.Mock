@@ -1,4 +1,5 @@
-﻿using Raml.Parser;
+﻿using Newtonsoft.Json.Schema;
+using Raml.Parser;
 using Raml.Parser.Expressions;
 using System;
 using System.Collections.Generic;
@@ -20,8 +21,13 @@ namespace RAMLNancyMock
             if (!File.Exists(ramlFilePath))
                 throw new FileNotFoundException($"Could not find the specified RAML file \"{ramlFilePath}\"!");
 
+            //Raml parser
             var parser = new RamlParser();
             _ramlDocument = parser.LoadAsync(ramlFilePath).Result;
+
+            //Extracting Routes (Resources), Methods and Response information
+            _routes = new List<Route>();
+            _parseResourcesToRoutes(_ramlDocument.Resources, _routes, String.Empty);
         }
        
         public Uri BaseUri
@@ -45,24 +51,23 @@ namespace RAMLNancyMock
         {
             get
             {
-                if(_routes == null)
-                {
-                   _routes = new List<Route>();
-                    _parseResources(_ramlDocument.Resources, _routes, String.Empty);
-                }
-
                 return _routes.AsReadOnly();
             }
         }
 
-        private void _parseResources(ICollection<Resource> resources, List<Route> routesList, string baseRoute)
+        private void _parseResourcesToRoutes(IEnumerable<Resource> resources, List<Route> routesList, string baseRoute)
         {
             foreach (var resource in resources)
             {
-                string route = String.Concat(baseRoute, resource.RelativeUri);
-                routesList.Add(new Route(route));
+                string routePath = String.Concat(baseRoute, resource.RelativeUri);
+
+                var route = new Route(routePath);
+                route.ParseMethods(resource.Methods);
+                routesList.Add(route);
+
+                //down the tree
                 if (resource.Resources.Count > 0)
-                    _parseResources(resource.Resources, routesList, route);
+                    _parseResourcesToRoutes(resource.Resources, routesList, routePath);
             }
         }
     }

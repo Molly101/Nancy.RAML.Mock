@@ -18,7 +18,7 @@ namespace RAMLNancyMock
         static void Main(string[] args)
         {
             Uri nancyUri = new Uri("http://localhost:52190");   //ToDo: ramlDoc.BaseUri
-            string ramlFilePath = @"F:\Project\box.raml";       //ToDo: args[1]
+            string ramlFilePath = @"d:\Project\api.raml";       //ToDo: args[1]
 
             //Open and parse RAML file
             RAMLDocument ramlDoc = null;                
