@@ -20,9 +20,9 @@ namespace RAMLNancyMock
             var ramlDoc = new RAML(Program.ramlFilePath);
 
             var routes = from r in ramlDoc.Routes
-                            from m in r.Methods
-                            where (m.verb == "post" && r.Parameters.Count == 0) || 
-                                  (m.verb == "put" || m.verb == "delete" || m.verb == "get") && r.Parameters.Count == 1
+                         from m in r.Methods
+                         where (m.verb == "post" && r.Parameters.Count == 0) || 
+                               (m.verb == "put" || m.verb == "delete" || m.verb == "get") && r.Parameters.Count == 1
                          select new {
                                 route = r.route,
                                 parameter = r.Parameters,

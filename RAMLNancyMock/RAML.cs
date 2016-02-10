@@ -16,9 +16,6 @@ namespace RAMLNancyMock
 
         public RAML(string ramlFilePath)
         {
-            if (!File.Exists(ramlFilePath))
-                throw new FileNotFoundException($"Could not find the specified RAML file \"{ramlFilePath}\"!");
-
             //Raml parser
             var parser = new RamlParser();
             _ramlDocument = parser.LoadAsync(ramlFilePath).Result;

@@ -1,0 +1,100 @@
+#%RAML 0.8
+title: Order
+version: 0.1
+baseUri: http://localhost:52109
+protocols: [HTTP]
+schemas:
+  - movie: |
+      {
+        "$schema": "http://json-schema.org/draft-03/schema",
+        "type": "object",
+        "description": "a movie",
+        "properties": {
+          "id": { "type": "integer"},
+          "name": { "type": "string"},
+          "director": { "type": "string"},
+          "genre": { "type": "string" },
+          "cast":{ "type": "string" },
+          "duration":{ "type": "number" },
+          "storyline":{ "type": "string" },
+          "language":{ "type": "string" }
+        }
+      }
+
+/movies:
+  post:
+    description: adds a movie to the catalogue
+    body:
+      application/json:
+        schema: movie
+        example: |
+          {
+            "id" : 1,
+            "name": "Big Fish",
+            "director": "Tim Burton",
+            "genre": "Drama, Fantasy",
+            "cast": "Ewan McGregor, Albert Finney, Billy Crudup",
+            "language": "English"
+          }
+    responses:
+      201:
+        description: correct request
+        body:
+          application/json:
+            schema: movie
+      400:
+        description: incorrect request
+      422:
+        description: invalid schema
+  /{id}:
+    put:
+      description: update the info of a movie
+      body:
+        application/json:
+          schema: movie
+          example: |
+            {
+              "name": "Big Fish",
+              "director": "Tim Burton",
+              "genre": "Drama, Fantasy",
+              "cast": "Ewan McGregor, Albert Finney, Billy Crudup",
+              "language": "English"
+            }
+      responses:
+        202:
+          description: correct request
+          body:
+            application/json:
+              schema: movie
+        400:
+          description: incorrect request
+        422:
+          description: invalid schema
+        404:
+          description: id not found
+
+    delete:
+      description: remove a movie from the catalogue
+      responses:
+        203:
+          description: correct request
+        404:
+          description: id not found
+
+    get:
+      description: get the info of a movie
+      responses:
+        200:
+          body:
+            application/json:
+              schema: movie
+              example: |
+                {
+                  "id" : 1,
+                  "name": "Big Fish",
+                  "director": "Tim Burton",
+                  "genre": "Drama, Fantasy",
+                  "cast": "Ewan McGregor, Albert Finney, Billy Crudup",
+                  "language": "English",
+                  "rented": false
+                }
