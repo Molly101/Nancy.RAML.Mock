@@ -16,7 +16,9 @@
 [Rr]elease/
 [Rr]eleases/
 x64/
+!**/edge/x64/
 x86/
+!**/edge/x86/
 bld/
 [Bb]in/
 [Oo]bj/

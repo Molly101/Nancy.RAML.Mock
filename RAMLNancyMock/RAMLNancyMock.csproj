@@ -75,7 +75,7 @@
     <Compile Include="NancyREST.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="RAML.cs" />
+    <Compile Include="RAMLDocument.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

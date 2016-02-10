@@ -1,5 +1,6 @@
 ﻿using Nancy;
 using Nancy.Hosting.Self;
+using Nancy.TinyIoc;
 using NLog;
 using Raml.Parser.Expressions;
 using System;
@@ -11,36 +12,16 @@ using System.Threading.Tasks;
 
 namespace RAMLNancyMock
 {
-    class Program
+    public class Program
     {
         public static Logger logger = LogManager.GetCurrentClassLogger();     //NLog initiaization (via NLog.config)
+        public static string ramlFilePath = @"F:\Project\movies.raml";        //ToDo: args[1]
 
         static void Main(string[] args)
         {
-            Uri nancyUri = new Uri("http://localhost:52190");   //ToDo: ramlDoc.BaseUri
-            string ramlFilePath = @"d:\Project\api.raml";       //ToDo: args[1]
-
             //Open and parse RAML file
-            RAMLDocument ramlDoc = null;                
-            try {
-                ramlDoc = new RAMLDocument(ramlFilePath);
-            }
-            catch(FileNotFoundException fnfEx)          //Incorrect RAML file path
-            {
-                logger.Error(fnfEx);
-                return;
-            }
-            catch(AggregateException aggrEx)            //Exceptions received from assync RamlParser
-            {
-                foreach (var iEx in aggrEx.InnerExceptions)
-                    logger.Error($"RamlParser error: {iEx}");
-                return;
-            }
-
-
-            logger.Info("URI {0}", ramlDoc.BaseUri);
-            var a = ramlDoc.Routes;
-
+            var ramlDoc = new RAMLDocument(ramlFilePath);
+            Uri nancyUri = ramlDoc.BaseUri;
 
             //Starting Nancy self-hosted process
             HostConfiguration nancyConfig = new HostConfiguration() { RewriteLocalhost = false };

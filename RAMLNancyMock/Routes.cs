@@ -9,15 +9,15 @@ using System.Threading.Tasks;
 
 namespace RAMLNancyMock
 {
-    class Route
+    public class Route
     {
-        public readonly string _route;
+        public readonly string route;
         private List<RouteMethod> _methods;             
         private List<string> _parameters;
 
         public Route(string route)
         {
-            _route = route;
+            this.route = route;
             _methods = new List<RouteMethod>();
             _parameters = new List<string>();
 
@@ -85,7 +85,7 @@ namespace RAMLNancyMock
 
     }
 
-    class RouteMethod
+    public class RouteMethod
     {
         public readonly string verb;
         public readonly JSchema schema;
@@ -114,7 +114,7 @@ namespace RAMLNancyMock
         }
     }
 
-    struct MethodResponse
+    public struct MethodResponse
     {
         public readonly string returnCode;
         public readonly string description;
