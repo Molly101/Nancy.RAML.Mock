@@ -8,13 +8,13 @@ using System.Text;
 
 namespace RAMLNancyMock
 {
-    public sealed class RAMLDocument
+    public sealed class RAML
     {
         private readonly RamlDocument _ramlDocument = null;
         private Uri _baseUri = null;
-        private List<Route> _routes = null;
+        private List<RAMLRoute> _routes = null;
 
-        public RAMLDocument(string ramlFilePath)
+        public RAML(string ramlFilePath)
         {
             if (!File.Exists(ramlFilePath))
                 throw new FileNotFoundException($"Could not find the specified RAML file \"{ramlFilePath}\"!");
@@ -22,10 +22,6 @@ namespace RAMLNancyMock
             //Raml parser
             var parser = new RamlParser();
             _ramlDocument = parser.LoadAsync(ramlFilePath).Result;
-
-            //Extracting Routes (Resources), Methods and Response information
-            _routes = new List<Route>();
-            _parseResourcesToRoutes(_ramlDocument.Resources, _routes, String.Empty);
         }
        
         public Uri BaseUri
@@ -45,22 +41,27 @@ namespace RAMLNancyMock
             }
         }
 
-        public IList<Route> Routes
+        public IList<RAMLRoute> Routes
         {
             get
             {
+                if (_routes == null)
+                {
+                    _routes = new List<RAMLRoute>();
+                    _parseResourcesToRoutes(_ramlDocument.Resources, _routes, String.Empty);
+                }
+
                 return _routes.AsReadOnly();
             }
         }
 
-        private void _parseResourcesToRoutes(IEnumerable<Resource> resources, List<Route> routesList, string baseRoute)
+        private void _parseResourcesToRoutes(IEnumerable<Resource> resources, List<RAMLRoute> routesList, string baseRoute)
         {
+            //Extract & flatten Routes tree (from Resources), Methods and Responses information
             foreach (var resource in resources)
             {
                 string routePath = String.Concat(baseRoute, resource.RelativeUri);
-
-                var route = new Route(routePath);
-                route.ParseMethods(resource.Methods);
+                var route = new RAMLRoute(routePath, resource.Methods);
                 routesList.Add(route);
 
                 //down the tree

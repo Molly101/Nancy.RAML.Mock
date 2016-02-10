@@ -15,12 +15,12 @@ namespace RAMLNancyMock
     public class Program
     {
         public static Logger logger = LogManager.GetCurrentClassLogger();     //NLog initiaization (via NLog.config)
-        public static string ramlFilePath = @"F:\Project\movies.raml";        //ToDo: args[1]
+        public static string ramlFilePath = @"D:\Project\movies.raml";        //ToDo: args[1]
 
         static void Main(string[] args)
         {
             //Open and parse RAML file
-            var ramlDoc = new RAMLDocument(ramlFilePath);
+            var ramlDoc = new RAML(ramlFilePath);
             Uri nancyUri = ramlDoc.BaseUri;
 
             //Starting Nancy self-hosted process

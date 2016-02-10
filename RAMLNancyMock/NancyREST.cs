@@ -17,7 +17,7 @@ namespace RAMLNancyMock
 
         public RestModule()
         {
-            var ramlDoc = new RAMLDocument(Program.ramlFilePath);
+            var ramlDoc = new RAML(Program.ramlFilePath);
 
             var routes = from r in ramlDoc.Routes
                             from m in r.Methods
