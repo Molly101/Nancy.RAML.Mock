@@ -10,25 +10,30 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RAMLNancyMock
+namespace NancyRAMLMock
 {
     public class Program
     {
-        public static Logger logger = LogManager.GetCurrentClassLogger();     //NLog initiaization (via NLog.config)
-        public static string ramlFilePath;        
+        private static Logger logger = LogManager.GetCurrentClassLogger();     
 
         static void Main(string[] args)
         {
-            #if DEBUG
-                args = new[] { @"D:\Project\RAMLNancyMock\RAMLSamples\movies.raml" };
-            #endif
+            #region Debug args[0]
+#if DEBUG
+            args = new[] { @"F:\Project\RAMLNancyMock\RAMLSamples\movies.raml" };
+#endif
+            #endregion
 
-            ramlFilePath = args[0];
-            if (!File.Exists(ramlFilePath))
-                throw new FileNotFoundException($"Could not find the specified RAML file \"{ramlFilePath}\"!");
+            if (!String.IsNullOrEmpty(args[0]))
+                Configuration.RAMLFilePath = args[0];
+            if (!File.Exists(Configuration.RAMLFilePath))
+                throw new FileNotFoundException($"Could not find the specified RAML file \"{Configuration.RAMLFilePath}\"!");
+
+            if (args.Length==2 && !String.IsNullOrEmpty(args[1]))
+                Configuration.ConnectionString = args[1];
 
             //Open and parse RAML file
-            var ramlDoc = new RAML(ramlFilePath);
+            var ramlDoc = new RAML(Configuration.RAMLFilePath);
             Uri nancyUri = ramlDoc.BaseUri;
 
             //Starting Nancy self-hosted process

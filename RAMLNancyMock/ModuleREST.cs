@@ -9,15 +9,16 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RAMLNancyMock
+namespace NancyRAMLMock
 {
-    public class RestModule : NancyModule
+    public class ModuleREST : NancyModule
     {
-        private static ConcurrentDictionary<string, string> dataStorage = new ConcurrentDictionary<string, string>();
+        private IMongoClient _client;
+        private static IMongoDatabase _database;
 
-        public RestModule()
+        public ModuleREST()
         {
-            var ramlDoc = new RAML(Program.ramlFilePath);
+            var ramlDoc = new RAML(Configuration.RAMLFilePath);
 
             var routes = from r in ramlDoc.Routes
                          from m in r.Methods

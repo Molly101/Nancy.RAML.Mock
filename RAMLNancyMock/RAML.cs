@@ -6,7 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace RAMLNancyMock
+namespace NancyRAMLMock
 {
     public sealed class RAML
     {
