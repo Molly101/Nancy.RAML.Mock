@@ -86,6 +86,9 @@
   <ItemGroup>
     <Compile Include="Bootstrapper.cs" />
     <Compile Include="Configuration.cs" />
+    <Compile Include="Data\DataModel.cs" />
+    <Compile Include="Data\IDataStorage.cs" />
+    <Compile Include="Data\MongoDbDataStorage.cs" />
     <Compile Include="RAMLRouting.cs" />
     <Compile Include="ModuleREST.cs" />
     <Compile Include="Program.cs" />
@@ -623,6 +626,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

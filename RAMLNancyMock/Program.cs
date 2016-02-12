@@ -14,20 +14,26 @@ namespace NancyRAMLMock
 {
     public class Program
     {
-        private static Logger logger = LogManager.GetCurrentClassLogger();     
-
         static void Main(string[] args)
         {
             #region Debug args[0]
 #if DEBUG
-            args = new[] { @"F:\Project\RAMLNancyMock\RAMLSamples\movies.raml" };
+            args = new[] { @"D:\Project\RAMLNancyMock\RAMLSamples\movies.raml" };
 #endif
             #endregion
 
+            var logger = LogManager.GetLogger(Configuration.LoggerName);
+
             if (!String.IsNullOrEmpty(args[0]))
                 Configuration.RAMLFilePath = args[0];
+
             if (!File.Exists(Configuration.RAMLFilePath))
-                throw new FileNotFoundException($"Could not find the specified RAML file \"{Configuration.RAMLFilePath}\"!");
+            {
+                var ex = new FileNotFoundException($"Could not find the specified RAML file \"{Configuration.RAMLFilePath}\"!");
+
+                logger.Error(ex);
+                throw ex;
+            }
 
             if (args.Length==2 && !String.IsNullOrEmpty(args[1]))
                 Configuration.ConnectionString = args[1];
