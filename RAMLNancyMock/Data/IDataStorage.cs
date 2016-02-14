@@ -1,25 +1,23 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
-namespace RAMLNancyMock.Data
+namespace NancyRAMLMock.Data
 {
 
     /// <summary>
-    /// Deletes all demos.
+    /// Data Storage interface
     /// </summary>
     public interface IDataStorage
     {
         void Insert(DataModel model);
 
-        long Update(DataModel model);
+        bool Update(DataModel model);
 
         void Drop(DataModel model);
 
-        long Delete(DataModel model);
+        bool Delete(DataModel model);
 
-        IList<DataModel> Get(DataModel model);
+        DataModel Get(DataModel model);
+
+        IList<DataModel> GetMany(DataModel model);
     }
 }

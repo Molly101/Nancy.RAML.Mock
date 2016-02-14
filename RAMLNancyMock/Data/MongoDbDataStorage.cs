@@ -6,69 +6,73 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RAMLNancyMock.Data
+namespace NancyRAMLMock.Data
 {
     public class MongoDbDataStorage : IDataStorage
     {
-        private readonly IMongoCollection<BsonDocument> collection;
         private readonly IMongoDatabase database;
-        private readonly string pathElement = "__path";
-
-        private BsonDocument FullDocument(DataModel model) => BsonDocument.Parse(model.jsonModel).Add(pathElement, model.Path);
-        private BsonDocument FullQuery(DataModel model) => BsonDocument.Parse(model.jsonQuery).Add(pathElement, model.Path);
+        private IMongoCollection<BsonDocument> getMongoCollection(DataModel model) => database.GetCollection<BsonDocument>(model.getCollectionName());
 
         public MongoDbDataStorage(IMongoDatabase database)
         {
             this.database = database;
-            collection = database.GetCollection<BsonDocument>("JSONwithPath");
         }
 
         public void Insert(DataModel model)
         {
-            collection.InsertOne(FullDocument(model));
+            getMongoCollection(model).InsertOne(model.getBsonDoc());
         }
 
-        public long Update(DataModel model)
+        public bool Update(DataModel model)
         {
-            FilterDefinition<BsonDocument> filter = FullQuery(model);
-            var result = collection.UpdateMany(filter, FullDocument(model));
-            return result.ModifiedCount;
+            var result = getMongoCollection(model).UpdateOne(model.getFilter(), model.getBsonDoc());
+            return result.ModifiedCount == 1;
         }
 
         public void Drop(DataModel model)
         {
-            throw new NotImplementedException();
+            database.DropCollection(model.Path.Replace('\\', '_'));
         }
 
-        public long  Delete(DataModel model)
+        public bool  Delete(DataModel model)
         {
-            FilterDefinition<BsonDocument> filter = FullQuery(model);
+            var result = getMongoCollection(model).DeleteOne(model.getFilter());
 
-            var result = collection.DeleteMany(filter);
-
-            return result.DeletedCount;
+            return result.DeletedCount == 1;
         }
 
-        public IList<DataModel> Get(DataModel model)
+        public DataModel Get(DataModel model)
         {
-            FilterDefinition<BsonDocument> filter = FullQuery(model);
+            var record = getMongoCollection(model).Find(model.getFilter()).ToList().FirstOrDefault();
+            DataModel result = null;
 
-            var recordList = collection.Find(filter).ToList();
-            var modelList = new List<DataModel>();
-
-            foreach (var record in recordList)
+            if (record != null)
             {
-                var newModel = new DataModel();
-                newModel.Path = record.GetValue(pathElement).ToString();
-                record.Remove(pathElement);
-                newModel.jsonModel = record.ToJson();
-
-                modelList.Add(new DataModel());
+                result = new DataModel(){
+                    Path = model.Path,
+                    jsonModel = record.ToJson()
+                };
+                
             }
 
-            return modelList.AsReadOnly();
+            return result;
         }
 
-        
+        public IList<DataModel> GetMany(DataModel model)
+        {
+            var records = getMongoCollection(model).Find(model.getFilter()).ToList();
+            List<DataModel> result = new List<DataModel>();
+
+            foreach (var record in records)
+            {
+                result.Add(new DataModel()
+                    {
+                        Path = model.Path,
+                        jsonModel = record.ToJson()
+                    });
+            }
+
+            return result.AsReadOnly();
+        }
     }
 }

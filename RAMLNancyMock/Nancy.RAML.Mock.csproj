@@ -84,16 +84,24 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Bootstrapper.cs" />
+    <Compile Include="Data\DataModelExtension.cs" />
+    <Compile Include="Nancy\Bootstrapper.cs" />
     <Compile Include="Configuration.cs" />
     <Compile Include="Data\DataModel.cs" />
     <Compile Include="Data\IDataStorage.cs" />
     <Compile Include="Data\MongoDbDataStorage.cs" />
-    <Compile Include="RAMLRouting.cs" />
-    <Compile Include="ModuleREST.cs" />
+    <Compile Include="Nancy\RequestDetails.cs" />
+    <Compile Include="RAMLParsing\IRamlDocument.cs" />
+    <Compile Include="RAMLParsing\IRamlMethod.cs" />
+    <Compile Include="RAMLParsing\IRamlResource.cs" />
+    <Compile Include="RAMLParsing\IRamlResponse.cs" />
+    <Compile Include="RAMLParsing\RamlMethodWrapper.cs" />
+    <Compile Include="RAMLParsing\RamlResourceWrapper.cs" />
+    <Compile Include="Nancy\NancyRESTModule.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="RAML.cs" />
+    <Compile Include="RAMLParsing\RamlDocWrapper.cs" />
+    <Compile Include="RAMLParsing\RamlResponseWrapper.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

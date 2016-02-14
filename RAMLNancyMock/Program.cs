@@ -1,14 +1,8 @@
-﻿using Nancy;
-using Nancy.Hosting.Self;
-using Nancy.TinyIoc;
+﻿using Nancy.Hosting.Self;
+using NancyRAMLMock.RAMLParsing;
 using NLog;
-using Raml.Parser.Expressions;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace NancyRAMLMock
 {
@@ -18,11 +12,11 @@ namespace NancyRAMLMock
         {
             #region Debug args[0]
 #if DEBUG
-            args = new[] { @"D:\Project\RAMLNancyMock\RAMLSamples\movies.raml" };
+            args = new[] { @"F:\Project\RAMLNancyMock\RAMLSamples\movies.raml" };
 #endif
             #endregion
 
-            var logger = LogManager.GetLogger(Configuration.LoggerName);
+            ILogger logger = LogManager.GetLogger(Configuration.LoggerName);
 
             if (!String.IsNullOrEmpty(args[0]))
                 Configuration.RAMLFilePath = args[0];
@@ -35,26 +29,43 @@ namespace NancyRAMLMock
                 throw ex;
             }
 
-            if (args.Length==2 && !String.IsNullOrEmpty(args[1]))
+            if (args.Length == 2 && !String.IsNullOrEmpty(args[1]))
                 Configuration.ConnectionString = args[1];
 
             //Open and parse RAML file
-            var ramlDoc = new RAML(Configuration.RAMLFilePath);
-            Uri nancyUri = ramlDoc.BaseUri;
+            Uri nancyUri = null;
+            try
+            {
+                IRamlDocument ramlDoc = new RamlDocWrapper(Configuration.RAMLFilePath);
+                nancyUri = ramlDoc.BaseUri;
+            }
+            catch (Exception ex)
+            {
+                logger.Error("RAML parser caused an exception!");
+                logger.Error(ex);
+                throw;
+            }
 
             //Starting Nancy self-hosted process
             HostConfiguration nancyConfig = new HostConfiguration() { RewriteLocalhost = false };
-            using (var host = new NancyHost(nancyConfig, nancyUri))
+            NancyHost host = null;
+            try
             {
+                host = new NancyHost(nancyConfig, nancyUri);
                 host.Start();
                 logger.Info($"Nancy server is listening on \"{nancyUri}\"! Press [anything] Enter to stop the server!!!");
                 Console.ReadLine();
             }
-
+            catch (Exception ex)
+            {
+                logger.Error("Nancy server startup caused an exception!");
+                logger.Error(ex);
+                throw;
+            }
+            finally
+            {
+                host.Stop();
+            }
         }
-
-
     }
-
-    
 }
