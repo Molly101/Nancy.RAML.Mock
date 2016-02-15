@@ -27,40 +27,57 @@ namespace NancyRAMLMock
             this.logger = logger;
             this.ramlDoc = ramlDoc;
 
-            var queries = from r in ramlDoc.RamlResources
+            var requests = from r in ramlDoc.RamlResources
                           from m in r.RamlMethods
                           where (m.Verb == "post" && r.Path.Last() != '}') ||
                                 (m.Verb == "put" || m.Verb == "delete" || m.Verb == "get") && r.Path.Last() == '}'
                           select new RequestDetails(r, m);
 
 
-            foreach (var query in queries)
+            foreach (var request in requests)
             {
-            //    switch(query.verb)
-            //    {
-            //        //case "post":
-            //        //    Post[query.route] = param => postFx(param, query.methods);
-            //        //    break;
+                switch(request.Verb)
+                {
+                    case "post":
+                        Post[request.Path] = param => postFx(param, request);
+                        break;
             //        //case "get":
             //        //    Get[r.route] = param => getFx(param, r.parameter.Single());
             //        //    break;
 
-            //    }
+                }
             }
 
 
         }
 
-        private Response postFx(DynamicDictionary parameters, JSchema schema)
+        private Response postFx(DynamicDictionary parameters, RequestDetails request)
         {
             string requestString = Request.Body.AsString();
-            JObject requestJson = JObject.Parse(requestString);
-            bool valid = requestJson.IsValid(schema);
 
+            JObject requestJson = null;
+            try
+            {
+                requestJson = JObject.Parse(requestString);
+            }
+            catch(Exception ex)
+            {
+                logger.Error("Incorrect JSON in POST request!");
+                logger.Error(ex);
+            }
 
-            //dataStorage.TryAdd(requestJson.GetValue("id").ToString(), requestString);
+            JSchema jsonSchema = (request.Schema != null) ? JSchema.Parse(request.Schema) : null;
+            bool valid = (jsonSchema != null) ? requestJson.IsValid(jsonSchema) : false;
 
-            var a = dataStorage;
+            if (valid)
+            {
+                dataStorage.Insert(new DataModel {
+                    jsonSchema = request.Schema,
+                    jsonModel = requestString,
+                    Path = Request.Path
+                });
+            }
+                
             Response response = requestString;
             response.StatusCode = HttpStatusCode.OK;
 

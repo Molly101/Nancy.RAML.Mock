@@ -5,18 +5,19 @@ namespace NancyRAMLMock
 {
     public class RequestDetails
     {
-        IRamlResource resource { get; }
-        IRamlMethod method { get; }
+        public IRamlResource Resource { get; }
+        public IRamlMethod Method { get; }
 
-        public string Path => resource.Path;
-        public IList<string> Parameters => resource.RamlParameters;
-        public string Verb => method.Verb;
-        IList<IRamlResponse> Responces => method.RamlResponses;
+        public string Path => Resource.Path;
+        public IList<string> Parameters => Resource.RamlParameters;
+        public string Verb => Method.Verb;
+        IList<IRamlResponse> Responces => Method.RamlResponses;
+        public string Schema => (Method.IsMTJson) ? Method.JsonSchema : null;
         
         public RequestDetails(IRamlResource resource, IRamlMethod method)
         {
-            this.resource = resource;
-            this.method = method;
+            Resource = resource;
+            Method = method;
         }
     }
 }
