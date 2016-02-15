@@ -12,7 +12,7 @@ namespace NancyRAMLMock
         {
             #region Debug args[0]
 #if DEBUG
-            args = new[] { @"D:\Project\RAMLNancyMock\RAMLSamples\movies.raml" };
+            args = new[] { @"F:\Project\RAMLNancyMock\RAMLSamples\movies.raml" };
 #endif
             #endregion
 

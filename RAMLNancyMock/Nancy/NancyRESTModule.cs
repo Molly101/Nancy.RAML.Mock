@@ -47,7 +47,9 @@ namespace NancyRAMLMock
                     case "put":
                         Put[request.Path] = param => putFx(param, request);
                         break;
-                    
+                    case "delete":
+                        Delete[request.Path] = param => deleteFx(param, request);
+                        break;
 
                 }
             }
@@ -128,7 +130,7 @@ namespace NancyRAMLMock
             return response;
         }
 
-        private dynamic putFx(DynamicDictionary parameters, RequestDetails request)
+        private Response putFx(DynamicDictionary parameters, RequestDetails request)
         {
             string lastParName = request.Parameters.Last();
             string lastParValue = parameters[lastParName].Value;
@@ -158,6 +160,23 @@ namespace NancyRAMLMock
             }
 
             return response;
+        }
+
+        private Response deleteFx(DynamicDictionary parameters, RequestDetails request)
+        {
+            string lastParName = request.Parameters.Last();
+            string lastParValue = parameters[lastParName].Value;
+            string mongoPath = Request.Path.Replace($"{lastParValue}", "");
+            string jsonQuery = $"{{\"{lastParName}\":\"{lastParValue}\"}}";
+
+            var res = dataStorage.Delete(new DataModel
+            {
+                jsonSchema = request.Schema,
+                Path = mongoPath,
+                jsonQuery = jsonQuery,
+            });
+
+            return "Ok";
         }
     }
 }

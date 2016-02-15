@@ -58,6 +58,8 @@ namespace NancyRAMLMock.Data
         public bool  Delete(DataModel model)
         {
             var result = getMongoCollection(model).DeleteOne(model.getBsonQuery());
+            if(result.DeletedCount!=1)
+                result = getMongoCollection(model).DeleteOne(model.getBsonQueryUnquoted());
 
             return result.DeletedCount == 1;
         }
