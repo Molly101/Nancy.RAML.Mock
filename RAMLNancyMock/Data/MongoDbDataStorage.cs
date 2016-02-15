@@ -8,6 +8,9 @@ using System.Threading.Tasks;
 
 namespace NancyRAMLMock.Data
 {
+    /// <summary>
+    /// Data Storage implementation via MongoDb
+    /// </summary>
     public class MongoDbDataStorage : IDataStorage
     {
         private readonly IMongoDatabase database;
@@ -20,13 +23,31 @@ namespace NancyRAMLMock.Data
 
         public void Insert(DataModel model)
         {
-            getMongoCollection(model).InsertOne(model.getBsonDoc());
+            getMongoCollection(model).InsertOne(model.getBsonModel());
         }
 
-        public bool Update(DataModel model)
+        public DataModel Update(DataModel model)
         {
-            var result = getMongoCollection(model).UpdateOne(model.getFilter(), model.getBsonDoc());
-            return result.ModifiedCount == 1;
+
+            var originalDoc = Get(model).getBsonModel();
+            var replacementDoc = originalDoc.Merge(model.getBsonModel(), true);
+
+            var result = getMongoCollection(model).ReplaceOne(model.getBsonQuery(), replacementDoc);
+            if (result.ModifiedCount == 0)
+                result = getMongoCollection(model).ReplaceOne(model.getBsonQueryUnquoted(), replacementDoc);   // {"id":"1"} => {"id":1}
+
+            DataModel resModel = null;
+            replacementDoc.Remove("_id");
+            if (result.ModifiedCount == 1)
+            {
+                resModel = new DataModel
+                {
+                    Path = model.Path,
+                    jsonModel = replacementDoc.ToJson()
+                };
+            }
+
+            return resModel;
         }
 
         public void Drop(DataModel model)
@@ -36,21 +57,28 @@ namespace NancyRAMLMock.Data
 
         public bool  Delete(DataModel model)
         {
-            var result = getMongoCollection(model).DeleteOne(model.getFilter());
+            var result = getMongoCollection(model).DeleteOne(model.getBsonQuery());
 
             return result.DeletedCount == 1;
         }
 
         public DataModel Get(DataModel model)
         {
-            var record = getMongoCollection(model).Find(model.getFilter()).ToList().FirstOrDefault();
-            DataModel result = null;
+            var record = getMongoCollection(model).Find(model.getBsonQuery()).ToList().FirstOrDefault();
+            if(record == null)
+            {
+                record = getMongoCollection(model).Find(model.getBsonQueryUnquoted()).ToList().FirstOrDefault();        // {"id":"1"} => {"id":1}
+            }
 
+
+            DataModel result = null;
             if (record != null)
             {
-                result = new DataModel(){
+                record.Remove("_id");
+
+                result = new DataModel() {
                     Path = model.Path,
-                    jsonModel = record.ToJson()
+                    jsonModel = record.ToString()
                 };
                 
             }
@@ -60,16 +88,23 @@ namespace NancyRAMLMock.Data
 
         public IList<DataModel> GetMany(DataModel model)
         {
-            var records = getMongoCollection(model).Find(model.getFilter()).ToList();
-            List<DataModel> result = new List<DataModel>();
+            var records = getMongoCollection(model).Find(model.getBsonQuery()).ToList();
 
+            
+            if (records.Count == 0)
+            {
+                records = getMongoCollection(model).Find(model.getBsonQueryUnquoted()).ToList();                     // {"id":"1"} => {"id":1}
+            }
+
+            List<DataModel> result = new List<DataModel>();
             foreach (var record in records)
             {
+                record.Remove("_id");
                 result.Add(new DataModel()
-                    {
-                        Path = model.Path,
-                        jsonModel = record.ToJson()
-                    });
+                {
+                    Path = model.Path,
+                    jsonModel = record.ToJson()
+                });
             }
 
             return result.AsReadOnly();

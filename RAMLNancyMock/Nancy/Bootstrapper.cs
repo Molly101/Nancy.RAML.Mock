@@ -6,7 +6,9 @@ using NancyRAMLMock.Data;
 using NancyRAMLMock.RAMLParsing;
 
 namespace NancyRAMLMock
-{
+    { /// <summary>
+      /// Nancy Bootstrapper (dependency injection)
+      /// </summary>
     public class Bootstrapper : DefaultNancyBootstrapper
     {
         protected override void ConfigureApplicationContainer(TinyIoCContainer container)

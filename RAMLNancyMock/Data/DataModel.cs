@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 
 namespace NancyRAMLMock.Data
 {
+    /// <summary>
+    /// Data Storage model
+    /// </summary>
     public class DataModel
     {
         public string jsonModel { get; set; }

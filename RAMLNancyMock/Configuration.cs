@@ -8,7 +8,7 @@ namespace NancyRAMLMock
 
         public static string ConnectionString { get; set; } = @"mongodb://localhost:27017";
 
-        public static string DataBaseName { get; set; } = "NacyRAMLMock";
+        public static string DataBaseName { get; set; } = "NancyRAMLMock";
 
         public static string LoggerName { get; set; } = "Nancy.Raml.Mock";
     }

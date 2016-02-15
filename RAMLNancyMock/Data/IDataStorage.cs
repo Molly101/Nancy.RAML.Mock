@@ -4,13 +4,13 @@ namespace NancyRAMLMock.Data
 {
 
     /// <summary>
-    /// Data Storage interface
+    /// Database Storage interface
     /// </summary>
     public interface IDataStorage
     {
         void Insert(DataModel model);
 
-        bool Update(DataModel model);
+        DataModel Update(DataModel model);
 
         void Drop(DataModel model);
 
