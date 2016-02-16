@@ -29,49 +29,35 @@ namespace NancyRAMLMock.Data
         public DataModel Update(DataModel model)
         {
 
-            var originalDoc = Get(model).getBsonModel();
+            var originalDoc = GetBsonDoc(model);
             var replacementDoc = originalDoc.Merge(model.getBsonModel(), true);
 
-            var result = getMongoCollection(model).ReplaceOne(model.getBsonQuery(), replacementDoc);
-            if (result.ModifiedCount == 0)
-                result = getMongoCollection(model).ReplaceOne(model.getBsonQueryUnquoted(), replacementDoc);   // {"id":"1"} => {"id":1}
+            var result = getMongoCollection(model).ReplaceOne(model.getOrFilter(), replacementDoc);
 
             DataModel resModel = null;
             replacementDoc.Remove("_id");
             if (result.ModifiedCount == 1)
             {
-                resModel = new DataModel
-                {
-                    Path = model.Path,
-                    jsonModel = replacementDoc.ToJson()
-                };
+                resModel = new DataModel { jsonModel = replacementDoc.ToJson() };
             }
 
             return resModel;
         }
 
-        public void Drop(DataModel model)
+        public void Drop(DataModel model)   //TO DO
         {
-            database.DropCollection(model.Path.Replace('\\', '_'));
+            database.DropCollection(model.getCollectionName());
         }
 
-        public bool  Delete(DataModel model)
+        public bool Delete(DataModel model)
         {
-            var result = getMongoCollection(model).DeleteOne(model.getBsonQuery());
-            if(result.DeletedCount!=1)
-                result = getMongoCollection(model).DeleteOne(model.getBsonQueryUnquoted());
-
+            var result = getMongoCollection(model).DeleteOne(model.getOrFilter());
             return result.DeletedCount == 1;
         }
 
         public DataModel Get(DataModel model)
         {
-            var record = getMongoCollection(model).Find(model.getBsonQuery()).ToList().FirstOrDefault();
-            if(record == null)
-            {
-                record = getMongoCollection(model).Find(model.getBsonQueryUnquoted()).ToList().FirstOrDefault();        // {"id":"1"} => {"id":1}
-            }
-
+            var record = GetBsonDoc(model);
 
             DataModel result = null;
             if (record != null)
@@ -88,15 +74,9 @@ namespace NancyRAMLMock.Data
             return result;
         }
 
-        public IList<DataModel> GetMany(DataModel model)
+        public IList<DataModel> GetMany(DataModel model)    //TO DO
         {
-            var records = getMongoCollection(model).Find(model.getBsonQuery()).ToList();
-
-            
-            if (records.Count == 0)
-            {
-                records = getMongoCollection(model).Find(model.getBsonQueryUnquoted()).ToList();                     // {"id":"1"} => {"id":1}
-            }
+            var records = getMongoCollection(model).Find(model.getOrFilter()).ToList();
 
             List<DataModel> result = new List<DataModel>();
             foreach (var record in records)
@@ -110,6 +90,13 @@ namespace NancyRAMLMock.Data
             }
 
             return result.AsReadOnly();
+        }
+
+        private BsonDocument GetBsonDoc(DataModel model)
+        {
+            var record = getMongoCollection(model).Find(model.getOrFilter()).ToList().FirstOrDefault();
+
+            return record;
         }
     }
 }

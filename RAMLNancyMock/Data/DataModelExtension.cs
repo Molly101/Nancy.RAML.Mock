@@ -13,17 +13,14 @@ namespace NancyRAMLMock.Data
 
         public static string getCollectionName(this DataModel model) => model.Path.TrimStart('/').TrimEnd('/').Replace('/', '_');       // "/Somewhere/Something/" => "Somewhere_Something" 
 
-        public static BsonDocument getBsonQuery(this DataModel model) => BsonDocument.Parse(model.jsonQuery);
+        public static BsonDocument getFilter(this DataModel model) => BsonDocument.Parse(model.jsonQuery);
 
-        public static BsonDocument getBsonQueryUnquoted(this DataModel model)
+        public static FilterDefinition<BsonDocument> getOrFilter(this DataModel model)
         {
-            string unquotedQuery = model.jsonQuery;
-
-            unquotedQuery = unquotedQuery.Remove(unquotedQuery.LastIndexOf('"'),1);
-            unquotedQuery = unquotedQuery.Remove(unquotedQuery.LastIndexOf('"'),1);
-
-            return BsonDocument.Parse(unquotedQuery);
+            var builder = Builders<BsonDocument>.Filter;
+            FilterDefinition<BsonDocument> part1 = getFilter(model);
+            FilterDefinition<BsonDocument> part2 = getFilter(model).parseNumericElements();
+            return part1 | part2;
         }
-
     }
 }

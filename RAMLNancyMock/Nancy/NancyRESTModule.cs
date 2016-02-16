@@ -27,6 +27,8 @@ namespace NancyRAMLMock
             this.logger = logger;
             this.ramlDoc = ramlDoc;
 
+            //selecting only Post without parameter as the last element of the PATH 
+            //selecting Get, Put and Delete with a parameter (some kind of id) as the as last element of the PATH 
             var requests = from r in ramlDoc.RamlResources
                           from m in r.RamlMethods
                           where (m.Verb == "post" && r.Path.Last() != '}') ||

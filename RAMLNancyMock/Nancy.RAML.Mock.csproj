@@ -84,6 +84,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Data\BsonDocumentExtension.cs" />
     <Compile Include="Data\DataModelExtension.cs" />
     <Compile Include="Nancy\Bootstrapper.cs" />
     <Compile Include="Configuration.cs" />

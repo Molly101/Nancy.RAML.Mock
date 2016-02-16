@@ -6,7 +6,7 @@ using NancyRAMLMock.Data;
 using NancyRAMLMock.RAMLParsing;
 
 namespace NancyRAMLMock
-    { /// <summary>
+{ /// <summary>
       /// Nancy Bootstrapper (dependency injection)
       /// </summary>
     public class Bootstrapper : DefaultNancyBootstrapper
