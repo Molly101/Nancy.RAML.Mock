@@ -21,10 +21,8 @@ namespace NancyRAMLMock.Data
             this.database = database;
         }
 
-        public void Insert(DataModel model)
-        {
-            getMongoCollection(model).InsertOne(model.getBsonModel());
-        }
+        public void Insert(DataModel model) => getMongoCollection(model).InsertOne(model.getBsonModel());
+   
 
         public DataModel Update(DataModel model)
         {
@@ -34,14 +32,8 @@ namespace NancyRAMLMock.Data
 
             var result = getMongoCollection(model).ReplaceOne(model.getOrFilter(), replacementDoc);
 
-            DataModel resModel = null;
             replacementDoc.Remove("_id");
-            if (result.ModifiedCount == 1)
-            {
-                resModel = new DataModel { jsonModel = replacementDoc.ToJson() };
-            }
-
-            return resModel;
+            return (result.ModifiedCount == 1) ? new DataModel() { jsonModel = replacementDoc.ToJson() } : null;
         }
 
         public void Drop(DataModel model)   //TO DO
@@ -63,12 +55,7 @@ namespace NancyRAMLMock.Data
             if (record != null)
             {
                 record.Remove("_id");
-
-                result = new DataModel() {
-                    Path = model.Path,
-                    jsonModel = record.ToString()
-                };
-                
+                result = new DataModel() { jsonModel = record.ToString() };
             }
 
             return result;
@@ -82,21 +69,12 @@ namespace NancyRAMLMock.Data
             foreach (var record in records)
             {
                 record.Remove("_id");
-                result.Add(new DataModel()
-                {
-                    Path = model.Path,
-                    jsonModel = record.ToJson()
-                });
+                result.Add(new DataModel() { jsonModel = record.ToJson() });
             }
 
             return result.AsReadOnly();
         }
 
-        private BsonDocument GetBsonDoc(DataModel model)
-        {
-            var record = getMongoCollection(model).Find(model.getOrFilter()).ToList().FirstOrDefault();
-
-            return record;
-        }
+        private BsonDocument GetBsonDoc(DataModel model) => getMongoCollection(model).Find(model.getOrFilter()).ToList().FirstOrDefault();
     }
 }

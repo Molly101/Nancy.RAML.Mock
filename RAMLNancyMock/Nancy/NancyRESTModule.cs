@@ -27,8 +27,8 @@ namespace NancyRAMLMock
             this.logger = logger;
             this.ramlDoc = ramlDoc;
 
-            //selecting only Post without parameter as the last element of the PATH 
-            //selecting Get, Put and Delete with a parameter (some kind of id) as the as last element of the PATH 
+            //selecting only Post without parameter as the last element of the path  (i.e. /movies )
+            //selecting Get, Put and Delete with a parameter (some kind of id) as the as last element of the path (i.e. /movies/{id} )
             var requests = from r in ramlDoc.RamlResources
                           from m in r.RamlMethods
                           where (m.Verb == "post" && r.Path.Last() != '}') ||
@@ -55,16 +55,14 @@ namespace NancyRAMLMock
 
                 }
             }
-
-
         }
 
         private Response postFx(DynamicDictionary parameters, RequestDetails request)
         {
             string requestString = Request.Body.AsString();
-            var  response = new Response();
-            JObject requestJson = null;
+            var response = new Response();
 
+            JObject requestJson = null;
             try
             {
                 requestJson = JObject.Parse(requestString);
@@ -97,7 +95,7 @@ namespace NancyRAMLMock
             else
             {
                 logger.Error("JSON in POST request does not match RAML schema!!!");
-                response.StatusCode = HttpStatusCode.UnprocessableEntity;
+                response.StatusCode = HttpStatusCode.UnprocessableEntity;                     
             }
                 
             return response;
@@ -106,17 +104,13 @@ namespace NancyRAMLMock
 
         private Response getFx(DynamicDictionary parameters, RequestDetails request)
         {
-            string lastParName = request.Parameters.Last();
-            string lastParValue = parameters[lastParName].Value;
-            string mongoPath = Request.Path.Replace($"{lastParValue}", "");
-            string jsonQuery = $"{{\"{lastParName}\":\"{lastParValue}\"}}";
+            string lastParName = request.Parameters.Last();                                     //we are taking last parameter as an "id" 
+            string lastParValue = parameters[lastParName].Value;                                //and we will use this parameter name and its value to search in dataStorage
 
             var res = dataStorage.Get(new DataModel {
-                jsonSchema = request.Schema,
-                Path = mongoPath,
-                jsonQuery = jsonQuery
+                Path = Request.Path.Replace($"{lastParValue}", ""),                             // "/movies/101" => "/movies/", where 101 is some "id"
+                jsonQuery = $"{{\"{lastParName}\":\"{lastParValue}\"}}"                         // {"lastParameterName":"lastParameterValue"}
             });
-
 
             Response response = new Nancy.Response();
             if (res != null)
@@ -127,7 +121,7 @@ namespace NancyRAMLMock
             }
             else
             { 
-                response.StatusCode = HttpStatusCode.NotFound;
+                response.StatusCode = HttpStatusCode.NotFound;                                  
             }
             return response;
         }
@@ -136,29 +130,52 @@ namespace NancyRAMLMock
         {
             string lastParName = request.Parameters.Last();
             string lastParValue = parameters[lastParName].Value;
-            string mongoPath = Request.Path.Replace($"{lastParValue}", "");
-            string jsonQuery = $"{{\"{lastParName}\":\"{lastParValue}\"}}";
 
             string requestString = Request.Body.AsString();
+            var response = new Response();
 
-            var result = dataStorage.Update(new DataModel
+            JObject requestJson = null;
+            try
             {
-                jsonSchema = request.Schema,
-                Path = mongoPath,
-                jsonQuery = jsonQuery,
-                jsonModel = requestString
-            });
+                requestJson = JObject.Parse(requestString);
+            }
+            catch (Exception ex)
+            {
+                logger.Error("Incorrect JSON in PUT request!");
+                logger.Error(ex);
 
-            Response response = new Nancy.Response();
-            if (result != null)
-            {
-                response = result.jsonModel;
-                response.ContentType = "application/json";
-                response.StatusCode = (HttpStatusCode)request.SuccessResponseCode;
+                response = "Bad Request";
+                response.StatusCode = HttpStatusCode.BadRequest;
+                return response;
+            }
+
+            JSchema jsonSchema = (request.Schema != null) ? JSchema.Parse(request.Schema) : null;
+            bool valid = (jsonSchema != null && requestJson != null) ? requestJson.IsValid(jsonSchema) : false;
+            
+            if (valid)
+            { 
+                var res = dataStorage.Update(new DataModel
+                {
+                    Path = Request.Path.Replace($"{lastParValue}", ""),
+                    jsonQuery = $"{{\"{lastParName}\":\"{lastParValue}\"}}",
+                    jsonModel = requestString
+                });
+                
+                if (res != null)
+                {
+                    response = res.jsonModel;
+                    response.ContentType = "application/json";
+                    response.StatusCode = (HttpStatusCode) request.SuccessResponseCode;
+                }
+                else
+                {
+                    response.StatusCode = HttpStatusCode.NotFound;
+                }
             }
             else
             {
-                response.StatusCode = HttpStatusCode.NotFound;
+                logger.Error("JSON in PUT request does not match RAML schema!!!");
+                response.StatusCode = HttpStatusCode.UnprocessableEntity;
             }
 
             return response;
@@ -168,17 +185,14 @@ namespace NancyRAMLMock
         {
             string lastParName = request.Parameters.Last();
             string lastParValue = parameters[lastParName].Value;
-            string mongoPath = Request.Path.Replace($"{lastParValue}", "");
-            string jsonQuery = $"{{\"{lastParName}\":\"{lastParValue}\"}}";
 
             var res = dataStorage.Delete(new DataModel
             {
-                jsonSchema = request.Schema,
-                Path = mongoPath,
-                jsonQuery = jsonQuery,
+                Path = Request.Path.Replace($"{lastParValue}", ""),
+                jsonQuery = $"{{\"{lastParName}\":\"{lastParValue}\"}}",
             });
 
-            return "Ok";
+            return (res) ? (HttpStatusCode)request.SuccessResponseCode : HttpStatusCode.NotFound;
         }
     }
 }
