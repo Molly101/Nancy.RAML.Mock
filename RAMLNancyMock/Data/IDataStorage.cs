@@ -8,13 +8,13 @@ namespace NancyRAMLMock.Data
     /// </summary>
     public interface IDataStorage
     {
-        void Insert(DataModel model);
+        DataModel Insert(DataModel model);
 
         DataModel Update(DataModel model);
 
-        void Drop(DataModel model);
+        DataModel Drop(DataModel model);
 
-        bool Delete(DataModel model);
+        DataModel Delete(DataModel model);
 
         DataModel Get(DataModel model);
 

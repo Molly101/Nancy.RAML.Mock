@@ -21,7 +21,12 @@ namespace NancyRAMLMock.Data
             this.database = database;
         }
 
-        public void Insert(DataModel model) => getMongoCollection(model).InsertOne(model.getBsonModel());
+        public DataModel Insert(DataModel model)
+        {
+            getMongoCollection(model).InsertOne(model.getBsonModel());
+
+            return new DataModel() { operationSuccesfull = true };
+        }
    
 
         public DataModel Update(DataModel model)
@@ -33,18 +38,21 @@ namespace NancyRAMLMock.Data
             var result = getMongoCollection(model).ReplaceOne(model.getOrFilter(), replacementDoc);
 
             replacementDoc.Remove("_id");
-            return (result.ModifiedCount == 1) ? new DataModel() { jsonModel = replacementDoc.ToJson() } : null;
+            return new DataModel() { jsonModel = replacementDoc.ToJson(), operationSuccesfull = (result.ModifiedCount == 1) };
         }
 
-        public void Drop(DataModel model)   //TO DO
+        public DataModel Drop(DataModel model)   //TO DO
         {
             database.DropCollection(model.getCollectionName());
+
+            return new DataModel() { operationSuccesfull = true };
         }
 
-        public bool Delete(DataModel model)
+        public DataModel Delete(DataModel model)
         {
             var result = getMongoCollection(model).DeleteOne(model.getOrFilter());
-            return result.DeletedCount == 1;
+
+            return new DataModel() { operationSuccesfull = (result.DeletedCount == 1) }; 
         }
 
         public DataModel Get(DataModel model)
@@ -69,7 +77,7 @@ namespace NancyRAMLMock.Data
             foreach (var record in records)
             {
                 record.Remove("_id");
-                result.Add(new DataModel() { jsonModel = record.ToJson() });
+                result.Add(new DataModel() { jsonModel = record.ToJson(), operationSuccesfull = true });
             }
 
             return result.AsReadOnly();

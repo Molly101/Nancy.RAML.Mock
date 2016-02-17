@@ -18,6 +18,8 @@ namespace NancyRAMLMock.Data
         public string jsonQuery { get; set; }
 
         public string Path { get; set; }
+
+        public bool operationSuccesfull { get; set; }
     }
 
 

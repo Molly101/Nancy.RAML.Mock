@@ -41,158 +41,183 @@ namespace NancyRAMLMock
                 switch(request.Verb)
                 {
                     case "post":
-                        Post[request.Path] = param => postFx(param, request);
+                        Post[request.Path] = param => processRequest(param, request,  dataStorage.Insert);
                         break;
-                    case "get":
-                        Get[request.Path] = param => getFx(param, request);
-                        break;
-                    case "put":
-                        Put[request.Path] = param => putFx(param, request);
-                        break;
-                    case "delete":
-                        Delete[request.Path] = param => deleteFx(param, request);
-                        break;
+                    //case "get":
+                    //    Get[request.Path] = param => getFx(param, request);
+                    //    break;
+                    //case "put":
+                    //    Put[request.Path] = param => putFx(param, request);
+                    //    break;
+                    //case "delete":
+                    //    Delete[request.Path] = param => deleteFx(param, request);
+                    //    break;
 
                 }
             }
         }
 
-        private Response postFx(DynamicDictionary parameters, RequestDetails request)
+        private Response upsertRes(DataModel resultModel, int successCode)
         {
-            string requestString = Request.Body.AsString();
-            var response = new Response();
-
-            JObject requestJson = null;
-            try
+            var response = new Response()
             {
-                requestJson = JObject.Parse(requestString);
-            }
-            catch(Exception ex)
-            {
-                logger.Error("Incorrect JSON in POST request!");
-                logger.Error(ex);
+                ContentType = "application/json",
+                StatusCode = (HttpStatusCode)successCode
+            };
 
-                response = "Bad Request";
-                response.StatusCode = HttpStatusCode.BadRequest;
-                return response;
-            }
+            response = resultModel.jsonModel;
 
-            JSchema jsonSchema = (request.Schema != null) ? JSchema.Parse(request.Schema) : null;
-            bool valid = (jsonSchema != null && requestJson != null) ? requestJson.IsValid(jsonSchema) : false;
-
-            if (valid)
-            {
-                dataStorage.Insert(new DataModel {
-                    jsonSchema = request.Schema,
-                    jsonModel = requestString,
-                    Path = Request.Path
-                });
-
-                response = requestString;
-                response.ContentType = "application/json";
-                response.StatusCode = (HttpStatusCode) request.SuccessResponseCode;
-            }
-            else
-            {
-                logger.Error("JSON in POST request does not match RAML schema!!!");
-                response.StatusCode = HttpStatusCode.UnprocessableEntity;                     
-            }
-                
-            return response;
+           return response;
         }
 
 
-        private Response getFx(DynamicDictionary parameters, RequestDetails request)
+        //private Response getFx(DynamicDictionary parameters, RequestDetails request)
+        //{
+        //    string lastParName = request.Parameters.Last();                                     //we are taking last parameter as an "id" 
+        //    string lastParValue = parameters[lastParName].Value;                                //and we will use this parameter name and its value to search in dataStorage
+
+        //    var res = dataStorage.Get(new DataModel {
+        //        Path = Request.Path.Replace($"{lastParValue}", ""),                             // "/movies/101" => "/movies/", where 101 is some "id"
+        //        jsonQuery = $"{{\"{lastParName}\":\"{lastParValue}\"}}"                         // {"lastParameterName":"lastParameterValue"}
+        //    });
+
+        //    Response response = new Nancy.Response();
+        //    if (res != null)
+        //    {
+        //        response = res.jsonModel;
+        //        response.ContentType = "application/json";
+        //        response.StatusCode = (HttpStatusCode)request.SuccessResponseCode;
+        //    }
+        //    else
+        //    { 
+        //        response.StatusCode = HttpStatusCode.NotFound;                                  
+        //    }
+        //    return response;
+        //}
+
+        //private Response putFx(DynamicDictionary parameters, RequestDetails request)
+        //{
+        //    string lastParName = request.Parameters.Last();
+        //    string lastParValue = parameters[lastParName].Value;
+
+        //    string requestString = Request.Body.AsString();
+        //    var response = new Response();
+
+        //    JObject requestJson = null;
+        //    try
+        //    {
+        //        requestJson = JObject.Parse(requestString);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        logger.Error("Incorrect JSON in PUT request!");
+        //        logger.Error(ex);
+
+        //        response = "Bad Request";
+        //        response.StatusCode = HttpStatusCode.BadRequest;
+        //        return response;
+        //    }
+
+        //    JSchema jsonSchema = (request.Schema != null) ? JSchema.Parse(request.Schema) : null;
+        //    bool valid = (jsonSchema != null && requestJson != null) ? requestJson.IsValid(jsonSchema) : false;
+
+        //    if (valid)
+        //    { 
+        //        var res = dataStorage.Update(new DataModel
+        //        {
+        //            Path = Request.Path.Replace($"{lastParValue}", ""),
+        //            jsonQuery = $"{{\"{lastParName}\":\"{lastParValue}\"}}",
+        //            jsonModel = requestString
+        //        });
+
+        //        if (res != null)
+        //        {
+        //            response = res.jsonModel;
+        //            response.ContentType = "application/json";
+        //            response.StatusCode = (HttpStatusCode) request.SuccessResponseCode;
+        //        }
+        //        else
+        //        {
+        //            response.StatusCode = HttpStatusCode.NotFound;
+        //        }
+        //    }
+        //    else
+        //    {
+        //        logger.Error("JSON in PUT request does not match RAML schema!!!");
+        //        response.StatusCode = HttpStatusCode.UnprocessableEntity;
+        //    }
+
+        //    return response;
+        //}
+
+        //private Response deleteFx(DynamicDictionary parameters, RequestDetails request)
+        //{
+        //    string lastParName = request.Parameters.Last();
+        //    string lastParValue = parameters[lastParName].Value;
+
+        //    var res = dataStorage.Delete(new DataModel
+        //    {
+        //        Path = Request.Path.Replace($"{lastParValue}", ""),
+        //        jsonQuery = $"{{\"{lastParName}\":\"{lastParValue}\"}}",
+        //    });
+
+        //    return (res) ? (HttpStatusCode)request.SuccessResponseCode : HttpStatusCode.NotFound;
+        //}
+
+
+        private Response processRequest(DynamicDictionary parameters, RequestDetails requestDetails, 
+            Func<DataModel, DataModel> dataStorageDelegate) //, Func<DataModel, int, Response> ResponseFromDBOpResult
         {
-            string lastParName = request.Parameters.Last();                                     //we are taking last parameter as an "id" 
-            string lastParValue = parameters[lastParName].Value;                                //and we will use this parameter name and its value to search in dataStorage
-
-            var res = dataStorage.Get(new DataModel {
-                Path = Request.Path.Replace($"{lastParValue}", ""),                             // "/movies/101" => "/movies/", where 101 is some "id"
-                jsonQuery = $"{{\"{lastParName}\":\"{lastParValue}\"}}"                         // {"lastParameterName":"lastParameterValue"}
-            });
-
-            Response response = new Nancy.Response();
-            if (res != null)
-            {
-                response = res.jsonModel;
-                response.ContentType = "application/json";
-                response.StatusCode = (HttpStatusCode)request.SuccessResponseCode;
-            }
-            else
-            { 
-                response.StatusCode = HttpStatusCode.NotFound;                                  
-            }
-            return response;
-        }
-
-        private Response putFx(DynamicDictionary parameters, RequestDetails request)
-        {
-            string lastParName = request.Parameters.Last();
-            string lastParValue = parameters[lastParName].Value;
-
-            string requestString = Request.Body.AsString();
+            var dataModel = new DataModel() { Path = Request.Path };
             var response = new Response();
 
-            JObject requestJson = null;
-            try
+            //If request have parameters - construct the Path and jsonQuery for the Model (i.e. "/movies/{id}")
+            if (requestDetails.Parameters != null && requestDetails.Parameters.Any())
             {
-                requestJson = JObject.Parse(requestString);
-            }
-            catch (Exception ex)
-            {
-                logger.Error("Incorrect JSON in PUT request!");
-                logger.Error(ex);
+                string lastParName = requestDetails.Parameters.Last();                                  //we are assuming that the last parameter in request path is an "id" 
+                string lastParValue = parameters[lastParName].Value;                                    //and we can use this parameter name and value to compose json filter for our dataStorage        
 
-                response = "Bad Request";
-                response.StatusCode = HttpStatusCode.BadRequest;
-                return response;
+                dataModel.Path.Remove(dataModel.Path.Length - lastParValue.Length);                     //remove last parameter value from the "/movies/101" => "/movies/", where 101 is some "id"
+                dataModel.jsonQuery = $"{{\"{lastParName}\":\"{lastParValue}\"}}";                      // {"lastParameterName":"lastParameterValue"}
             }
 
-            JSchema jsonSchema = (request.Schema != null) ? JSchema.Parse(request.Schema) : null;
-            bool valid = (jsonSchema != null && requestJson != null) ? requestJson.IsValid(jsonSchema) : false;
             
-            if (valid)
-            { 
-                var res = dataStorage.Update(new DataModel
-                {
-                    Path = Request.Path.Replace($"{lastParValue}", ""),
-                    jsonQuery = $"{{\"{lastParName}\":\"{lastParValue}\"}}",
-                    jsonModel = requestString
-                });
-                
-                if (res != null)
-                {
-                    response = res.jsonModel;
-                    response.ContentType = "application/json";
-                    response.StatusCode = (HttpStatusCode) request.SuccessResponseCode;
-                }
-                else
-                {
-                    response.StatusCode = HttpStatusCode.NotFound;
-                }
-            }
-            else
+            JObject reqBobyJsonObj = null;
+            string reqBodyJsonStr = Request.Body.AsString();
+
+            //if request body contains Json - we need to validate (try to parse) this Json first
+            if (!String.IsNullOrEmpty(reqBodyJsonStr))
             {
-                logger.Error("JSON in PUT request does not match RAML schema!!!");
-                response.StatusCode = HttpStatusCode.UnprocessableEntity;
+                try
+                {
+                    reqBobyJsonObj = JObject.Parse(reqBodyJsonStr);
+                }
+                catch (Exception ex)
+                {
+                    logger.Error($"Incorrect JSON in {requestDetails.Verb.ToUpper()} request!");
+                    logger.Error(ex);
+
+                    response = "Bad Request";
+                    response.StatusCode = HttpStatusCode.BadRequest;
+                    return response;                                        
+                }            
             }
 
-            return response;
+            //If request have an associated schema - we need to validate received Json (from request body) with this schema
+            if (!String.IsNullOrEmpty(requestDetails.Schema)) { 
+                JSchema jsonSchema = JSchema.Parse(requestDetails.Schema);
+                if (!reqBobyJsonObj?.IsValid(jsonSchema) ?? true)
+                {
+                    logger.Error($"JSON in {requestDetails.Verb.ToUpper()} request does not match the RAML schema!!!");
+                    response.StatusCode = HttpStatusCode.UnprocessableEntity;
+                    return response;
+                }
+            }
+
+            dataModel.jsonModel = reqBodyJsonStr;
+
+            return ResponseFromDBOpResult(dataStorageDelegate(dataModel), requestDetails.SuccessResponseCode);
         }
-
-        private Response deleteFx(DynamicDictionary parameters, RequestDetails request)
-        {
-            string lastParName = request.Parameters.Last();
-            string lastParValue = parameters[lastParName].Value;
-
-            var res = dataStorage.Delete(new DataModel
-            {
-                Path = Request.Path.Replace($"{lastParValue}", ""),
-                jsonQuery = $"{{\"{lastParName}\":\"{lastParValue}\"}}",
-            });
-
-            return (res) ? (HttpStatusCode)request.SuccessResponseCode : HttpStatusCode.NotFound;
-        }
+      
     }
 }
