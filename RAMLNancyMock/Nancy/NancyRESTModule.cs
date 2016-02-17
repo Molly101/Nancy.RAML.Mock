@@ -30,39 +30,41 @@ namespace NancyRAMLMock
             //selecting only Post without parameter as the last element of the path  (i.e. /movies )
             //selecting Get, Put and Delete with a parameter (some kind of id) as the as last element of the path (i.e. /movies/{id} )
             var requests = from r in ramlDoc.RamlResources
-                          from m in r.RamlMethods
-                          where (m.Verb == "post" && r.Path.Last() != '}') ||
-                                (m.Verb == "put" || m.Verb == "delete" || m.Verb == "get") && r.Path.Last() == '}'
-                          select new RequestDetails(r, m);
+                           from m in r.RamlMethods
+                           where (m.Verb == "post" && r.Path.Last() != '}') ||
+                                 (m.Verb == "put" || m.Verb == "delete" || m.Verb == "get") && r.Path.Last() == '}'
+                           select new RequestDetails(r, m);
 
 
             foreach (var request in requests)
             {
-                switch(request.Verb)
+                switch (request.Verb)
                 {
                     case "post":
-                        Post[request.Path] = param => processRequest(param, request,  dataStorage.Insert);
+                        Post[request.Path] = param => processRequest(param, request, (Func<DataModel, DataModel>) dataStorage.Insert, (Func<DataModel, RequestDetails, Response>) upsertRes);
                         break;
-                    //case "get":
-                    //    Get[request.Path] = param => getFx(param, request);
-                    //    break;
-                    //case "put":
-                    //    Put[request.Path] = param => putFx(param, request);
-                    //    break;
-                    //case "delete":
-                    //    Delete[request.Path] = param => deleteFx(param, request);
-                    //    break;
+                        //case "get":
+                        //    Get[request.Path] = param => getFx(param, request);
+                        //    break;
+                    case "put":
+                        Put[request.Path] = param => processRequest(param, request, (Func<DataModel, DataModel>) dataStorage.Insert, (Func<DataModel, RequestDetails, Response>) upsertRes);
+                        break;
+                        //case "delete":
+                        //    Delete[request.Path] = param => deleteFx(param, request);
+                        //    break;
 
                 }
             }
         }
 
-        private Response upsertRes(DataModel resultModel, int successCode)
+
+
+        private Response upsertRes(DataModel resultModel, RequestDetails requestDetails)
         {
             var response = new Response()
             {
                 ContentType = "application/json",
-                StatusCode = (HttpStatusCode)successCode
+                StatusCode = (HttpStatusCode) requestDetails.SuccessResponseCode
             };
 
             response = resultModel.jsonModel;
@@ -71,104 +73,9 @@ namespace NancyRAMLMock
         }
 
 
-        //private Response getFx(DynamicDictionary parameters, RequestDetails request)
-        //{
-        //    string lastParName = request.Parameters.Last();                                     //we are taking last parameter as an "id" 
-        //    string lastParValue = parameters[lastParName].Value;                                //and we will use this parameter name and its value to search in dataStorage
-
-        //    var res = dataStorage.Get(new DataModel {
-        //        Path = Request.Path.Replace($"{lastParValue}", ""),                             // "/movies/101" => "/movies/", where 101 is some "id"
-        //        jsonQuery = $"{{\"{lastParName}\":\"{lastParValue}\"}}"                         // {"lastParameterName":"lastParameterValue"}
-        //    });
-
-        //    Response response = new Nancy.Response();
-        //    if (res != null)
-        //    {
-        //        response = res.jsonModel;
-        //        response.ContentType = "application/json";
-        //        response.StatusCode = (HttpStatusCode)request.SuccessResponseCode;
-        //    }
-        //    else
-        //    { 
-        //        response.StatusCode = HttpStatusCode.NotFound;                                  
-        //    }
-        //    return response;
-        //}
-
-        //private Response putFx(DynamicDictionary parameters, RequestDetails request)
-        //{
-        //    string lastParName = request.Parameters.Last();
-        //    string lastParValue = parameters[lastParName].Value;
-
-        //    string requestString = Request.Body.AsString();
-        //    var response = new Response();
-
-        //    JObject requestJson = null;
-        //    try
-        //    {
-        //        requestJson = JObject.Parse(requestString);
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        logger.Error("Incorrect JSON in PUT request!");
-        //        logger.Error(ex);
-
-        //        response = "Bad Request";
-        //        response.StatusCode = HttpStatusCode.BadRequest;
-        //        return response;
-        //    }
-
-        //    JSchema jsonSchema = (request.Schema != null) ? JSchema.Parse(request.Schema) : null;
-        //    bool valid = (jsonSchema != null && requestJson != null) ? requestJson.IsValid(jsonSchema) : false;
-
-        //    if (valid)
-        //    { 
-        //        var res = dataStorage.Update(new DataModel
-        //        {
-        //            Path = Request.Path.Replace($"{lastParValue}", ""),
-        //            jsonQuery = $"{{\"{lastParName}\":\"{lastParValue}\"}}",
-        //            jsonModel = requestString
-        //        });
-
-        //        if (res != null)
-        //        {
-        //            response = res.jsonModel;
-        //            response.ContentType = "application/json";
-        //            response.StatusCode = (HttpStatusCode) request.SuccessResponseCode;
-        //        }
-        //        else
-        //        {
-        //            response.StatusCode = HttpStatusCode.NotFound;
-        //        }
-        //    }
-        //    else
-        //    {
-        //        logger.Error("JSON in PUT request does not match RAML schema!!!");
-        //        response.StatusCode = HttpStatusCode.UnprocessableEntity;
-        //    }
-
-        //    return response;
-        //}
-
-        //private Response deleteFx(DynamicDictionary parameters, RequestDetails request)
-        //{
-        //    string lastParName = request.Parameters.Last();
-        //    string lastParValue = parameters[lastParName].Value;
-
-        //    var res = dataStorage.Delete(new DataModel
-        //    {
-        //        Path = Request.Path.Replace($"{lastParValue}", ""),
-        //        jsonQuery = $"{{\"{lastParName}\":\"{lastParValue}\"}}",
-        //    });
-
-        //    return (res) ? (HttpStatusCode)request.SuccessResponseCode : HttpStatusCode.NotFound;
-        //}
-
-
-        private Response processRequest(DynamicDictionary parameters, RequestDetails requestDetails, 
-            Func<DataModel, DataModel> dataStorageDelegate) //, Func<DataModel, int, Response> ResponseFromDBOpResult
+        private Response processRequest(DynamicDictionary parameters, RequestDetails requestDetails, Func<DataModel, DataModel> dataStorageDelegate, Func<DataModel, RequestDetails, Response> responseDelegate)
         {
-            var dataModel = new DataModel() { Path = Request.Path };
+            var reqDataModel = new DataModel() { Path = Request.Path };
             var response = new Response();
 
             //If request have parameters - construct the Path and jsonQuery for the Model (i.e. "/movies/{id}")
@@ -177,8 +84,8 @@ namespace NancyRAMLMock
                 string lastParName = requestDetails.Parameters.Last();                                  //we are assuming that the last parameter in request path is an "id" 
                 string lastParValue = parameters[lastParName].Value;                                    //and we can use this parameter name and value to compose json filter for our dataStorage        
 
-                dataModel.Path.Remove(dataModel.Path.Length - lastParValue.Length);                     //remove last parameter value from the "/movies/101" => "/movies/", where 101 is some "id"
-                dataModel.jsonQuery = $"{{\"{lastParName}\":\"{lastParValue}\"}}";                      // {"lastParameterName":"lastParameterValue"}
+                reqDataModel.Path.Remove(reqDataModel.Path.Length - lastParValue.Length);                     //remove last parameter value from the "/movies/101" => "/movies/", where 101 is some "id"
+                reqDataModel.jsonQuery = $"{{\"{lastParName}\":\"{lastParValue}\"}}";                      // {"lastParameterName":"lastParameterValue"}
             }
 
             
@@ -214,9 +121,11 @@ namespace NancyRAMLMock
                 }
             }
 
-            dataModel.jsonModel = reqBodyJsonStr;
-
-            return ResponseFromDBOpResult(dataStorageDelegate(dataModel), requestDetails.SuccessResponseCode);
+            reqDataModel.jsonModel = reqBodyJsonStr;
+            var resultingDataModel = dataStorageDelegate(reqDataModel);
+            response = responseDelegate(resultingDataModel, requestDetails);
+                
+            return response;
         }
       
     }

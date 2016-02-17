@@ -25,7 +25,7 @@ namespace NancyRAMLMock.Data
         {
             getMongoCollection(model).InsertOne(model.getBsonModel());
 
-            return new DataModel() { operationSuccesfull = true };
+            return new DataModel() { operationSuccesfull = true , jsonModel = model.jsonModel };
         }
    
 
