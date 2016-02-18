@@ -10,10 +10,12 @@ namespace NancyRAMLMock.Data
     /// </summary>
     public static class DataModelExtension
     {
+        private static char[] urlSeparators = { '/', ':' };
+
         public static BsonDocument getBsonModel(this DataModel model) => (!String.IsNullOrEmpty(model.jsonModel)) ? BsonDocument.Parse(model.jsonModel) : null;
 
-        public static string getCollectionName(this DataModel model) => model.Path.TrimStart('/').TrimEnd('/').Replace('/', '_');       // "/Somewhere/Something/" => "Somewhere_Something" 
-
+        public static string getCollectionName(this DataModel model) => String.Join("_", model.Path.Split(urlSeparators, StringSplitOptions.RemoveEmptyEntries));        // "http://localhost:52109/movies/" => "http_localhost_52109_movies" 
+        
         public static BsonDocument getFilter(this DataModel model) => BsonDocument.Parse(model.jsonQuery);
 
         public static FilterDefinition<BsonDocument> getOrFilter(this DataModel model)

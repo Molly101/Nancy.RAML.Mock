@@ -81,7 +81,7 @@ namespace NancyRAMLMock
         private Response processRequest(DynamicDictionary parameters, RequestDetails requestDetails, 
             Func<DataModel, DataModel> dataStorageDelegate, Func<DataModel, RequestDetails, Response> responseDelegate)
         {
-            var reqDataModel = new DataModel() { Path = Request.Path };
+            var reqDataModel = new DataModel() { Path = Request.Url };
             var response = new Response();
 
             //If request have parameters - construct the Path and jsonQuery for the Model (i.e. "/movies/{id}")

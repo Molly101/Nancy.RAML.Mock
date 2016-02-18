@@ -10,15 +10,9 @@ namespace NancyRAMLMock
     {
         static void Main(string[] args)
         {
-            #region Debug args[0]
-#if DEBUG
-            args = new[] { @"D:\Project\RAMLNancyMock\RAMLSamples\movies.raml" };
-#endif
-            #endregion
-
             ILogger logger = LogManager.GetLogger(Configuration.LoggerName);
 
-            if (!String.IsNullOrEmpty(args[0]))
+            if (args.Length == 1 && !String.IsNullOrEmpty(args[0]))
                 Configuration.RAMLFilePath = args[0];
 
             if (!File.Exists(Configuration.RAMLFilePath))
