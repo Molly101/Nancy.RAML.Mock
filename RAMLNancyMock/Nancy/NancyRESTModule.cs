@@ -41,23 +41,23 @@ namespace NancyRAMLMock
                 switch (request.Verb)
                 {
                     case "post":
-                        Post[request.Path] = param => processRequest(param, request, new Func<DataModel, DataModel>(dataStorage.Insert), new Func<DataModel, RequestDetails, Response>(processtRes));
+                        Post[request.Path] = param => processRequest(param, request, new Func<DataModel, DataModel>(dataStorage.Insert), new Func<DataModel, RequestDetails, Response>(processResp));
                         break;
                     case "get":
-                        Get[request.Path] = param => processRequest(param, request, new Func<DataModel, DataModel>(dataStorage.Get), new Func<DataModel, RequestDetails, Response>(processtRes));
+                        Get[request.Path] = param => processRequest(param, request, new Func<DataModel, DataModel>(dataStorage.Get), new Func<DataModel, RequestDetails, Response>(processResp));
                         break;
                     case "put":
-                        Put[request.Path] = param => processRequest(param, request, new Func<DataModel, DataModel>(dataStorage.Update), new Func<DataModel, RequestDetails, Response>(processtRes));
+                        Put[request.Path] = param => processRequest(param, request, new Func<DataModel, DataModel>(dataStorage.Update), new Func<DataModel, RequestDetails, Response>(processResp));
                         break;
                     case "delete":
-                        Delete[request.Path] = param => processRequest(param, request, new Func<DataModel, DataModel>(dataStorage.Delete), new Func<DataModel, RequestDetails, Response>(processtRes));
+                        Delete[request.Path] = param => processRequest(param, request, new Func<DataModel, DataModel>(dataStorage.Delete), new Func<DataModel, RequestDetails, Response>(processResp));
                         break;
 
                 }
             }
         }
 
-        private Response processtRes(DataModel resultModel, RequestDetails requestDetails)
+        private Response processResp(DataModel resultModel, RequestDetails requestDetails)
         {
             var response = new Response();
             if (resultModel.operationSuccesfull)

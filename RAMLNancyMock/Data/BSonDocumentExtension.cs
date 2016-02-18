@@ -16,7 +16,8 @@ namespace NancyRAMLMock.Data
         public static BsonDocument parseNumericElements(this BsonDocument original)         
         {
             var result = new BsonDocument();
-            int numInt;
+            Int32 numInt32;
+            Int64 numInt64;
             double numDouble;
             
             foreach(var el in original)
@@ -27,9 +28,13 @@ namespace NancyRAMLMock.Data
                 {
                     result.Add(el.Name, numDouble); 
                 }
-                else if(Int32.TryParse(elValue, out numInt))
+                else if(Int32.TryParse(elValue, out numInt32))
                 {
-                    result.Add(el.Name, numInt);
+                    result.Add(el.Name, numInt32);
+                }
+                else if (Int64.TryParse(elValue, out numInt64))
+                {
+                    result.Add(el.Name, numInt64);
                 }
                 else
                 {

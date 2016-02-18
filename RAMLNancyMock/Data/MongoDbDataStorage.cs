@@ -1,10 +1,8 @@
 ﻿using MongoDB.Bson;
 using MongoDB.Driver;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using MongoDB.Bson.IO;
 
 namespace NancyRAMLMock.Data
 {
@@ -27,25 +25,32 @@ namespace NancyRAMLMock.Data
 
             return new DataModel() { operationSuccesfull = true , jsonModel = model.jsonModel };
         }
-   
+
+        /// <summary>
+        /// MongoDb -> Find with Filter defined in DataModel and return BsonDocument
+        /// </summary>
+        private BsonDocument GetBsonDoc(DataModel model) => getMongoCollection(model).Find(model.getOrFilter()).ToList().FirstOrDefault();
 
         public DataModel Update(DataModel model)
         {
+            var resultModel = new DataModel() { operationSuccesfull = false };
 
             var originalDoc = GetBsonDoc(model);
-            var replacementDoc = originalDoc.Merge(model.getBsonModel(), true);
+            if (originalDoc != null)
+            {
+                var replacementDoc = originalDoc.Merge(model.getBsonModel(), true);
+                var replacementResult = getMongoCollection(model).ReplaceOne(model.getOrFilter(), replacementDoc);
+                
+                if (replacementResult.ModifiedCount == 1)
+                {
+                    resultModel.operationSuccesfull = true;
+                    replacementDoc.Remove("_id");
+                    resultModel.jsonModel = replacementDoc.ToJson(new JsonWriterSettings { OutputMode = JsonOutputMode.Strict });
+                }
 
-            var result = getMongoCollection(model).ReplaceOne(model.getOrFilter(), replacementDoc);
+            }
 
-            replacementDoc.Remove("_id");
-            return new DataModel() { jsonModel = replacementDoc.ToJson(), operationSuccesfull = (result.ModifiedCount == 1) };
-        }
-
-        public DataModel Drop(DataModel model)   //TO DO
-        {
-            database.DropCollection(model.getCollectionName());
-
-            return new DataModel() { operationSuccesfull = true };
+            return resultModel;
         }
 
         public DataModel Delete(DataModel model)
@@ -57,21 +62,24 @@ namespace NancyRAMLMock.Data
 
         public DataModel Get(DataModel model)
         {
-            var record = GetBsonDoc(model);
+            var resultModel = new DataModel() { operationSuccesfull = false };
 
-            DataModel result = new DataModel();
+            var record = GetBsonDoc(model);
             if (record != null)
             {
                 record.Remove("_id");
-                result.jsonModel = record.ToString();
-                result.operationSuccesfull = true;
-            }
-            else
-            {
-                result.operationSuccesfull = false;
+                resultModel.jsonModel = record.ToJson(new JsonWriterSettings { OutputMode = JsonOutputMode.Strict});
+                resultModel.operationSuccesfull = true;
             }
 
-            return result;
+            return resultModel;
+        }
+
+        public DataModel Drop(DataModel model)   //TO DO
+        {
+            database.DropCollection(model.getCollectionName());
+
+            return new DataModel() { operationSuccesfull = true };
         }
 
         public IList<DataModel> GetMany(DataModel model)    //TO DO
@@ -82,12 +90,10 @@ namespace NancyRAMLMock.Data
             foreach (var record in records)
             {
                 record.Remove("_id");
-                result.Add(new DataModel() { jsonModel = record.ToJson(), operationSuccesfull = true });
+                result.Add(new DataModel() { jsonModel = record.ToJson(new JsonWriterSettings { OutputMode = JsonOutputMode.Strict }), operationSuccesfull = true });
             }
 
             return result.AsReadOnly();
         }
-
-        private BsonDocument GetBsonDoc(DataModel model) => getMongoCollection(model).Find(model.getOrFilter()).ToList().FirstOrDefault();
     }
 }
