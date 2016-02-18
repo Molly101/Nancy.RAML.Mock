@@ -59,11 +59,16 @@ namespace NancyRAMLMock.Data
         {
             var record = GetBsonDoc(model);
 
-            DataModel result = null;
+            DataModel result = new DataModel();
             if (record != null)
             {
                 record.Remove("_id");
-                result = new DataModel() { jsonModel = record.ToString() };
+                result.jsonModel = record.ToString();
+                result.operationSuccesfull = true;
+            }
+            else
+            {
+                result.operationSuccesfull = false;
             }
 
             return result;

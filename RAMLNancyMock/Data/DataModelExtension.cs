@@ -1,5 +1,6 @@
 ﻿using MongoDB.Bson;
 using MongoDB.Driver;
+using System;
 using System.Text;
 
 namespace NancyRAMLMock.Data
@@ -9,7 +10,7 @@ namespace NancyRAMLMock.Data
     /// </summary>
     public static class DataModelExtension
     {
-        public static BsonDocument getBsonModel(this DataModel model) => BsonDocument.Parse(model.jsonModel);
+        public static BsonDocument getBsonModel(this DataModel model) => (!String.IsNullOrEmpty(model.jsonModel)) ? BsonDocument.Parse(model.jsonModel) : null;
 
         public static string getCollectionName(this DataModel model) => model.Path.TrimStart('/').TrimEnd('/').Replace('/', '_');       // "/Somewhere/Something/" => "Somewhere_Something" 
 

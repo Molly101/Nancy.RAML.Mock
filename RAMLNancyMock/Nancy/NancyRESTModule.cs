@@ -41,39 +41,45 @@ namespace NancyRAMLMock
                 switch (request.Verb)
                 {
                     case "post":
-                        Post[request.Path] = param => processRequest(param, request, (Func<DataModel, DataModel>) dataStorage.Insert, (Func<DataModel, RequestDetails, Response>) upsertRes);
+                        Post[request.Path] = param => processRequest(param, request, new Func<DataModel, DataModel>(dataStorage.Insert), new Func<DataModel, RequestDetails, Response>(processtRes));
                         break;
-                        //case "get":
-                        //    Get[request.Path] = param => getFx(param, request);
-                        //    break;
+                    case "get":
+                        Get[request.Path] = param => processRequest(param, request, new Func<DataModel, DataModel>(dataStorage.Get), new Func<DataModel, RequestDetails, Response>(processtRes));
+                        break;
                     case "put":
-                        Put[request.Path] = param => processRequest(param, request, (Func<DataModel, DataModel>) dataStorage.Insert, (Func<DataModel, RequestDetails, Response>) upsertRes);
+                        Put[request.Path] = param => processRequest(param, request, new Func<DataModel, DataModel>(dataStorage.Update), new Func<DataModel, RequestDetails, Response>(processtRes));
                         break;
-                        //case "delete":
-                        //    Delete[request.Path] = param => deleteFx(param, request);
-                        //    break;
+                    case "delete":
+                        Delete[request.Path] = param => processRequest(param, request, new Func<DataModel, DataModel>(dataStorage.Delete), new Func<DataModel, RequestDetails, Response>(processtRes));
+                        break;
 
                 }
             }
         }
 
-
-
-        private Response upsertRes(DataModel resultModel, RequestDetails requestDetails)
+        private Response processtRes(DataModel resultModel, RequestDetails requestDetails)
         {
-            var response = new Response()
+            var response = new Response();
+            if (resultModel.operationSuccesfull)
             {
-                ContentType = "application/json",
-                StatusCode = (HttpStatusCode) requestDetails.SuccessResponseCode
+                response.StatusCode = (HttpStatusCode)requestDetails.SuccessResponseCode;
+
+                if (!String.IsNullOrEmpty(resultModel.jsonModel))
+                {
+                    response = resultModel.jsonModel;
+                    response.ContentType = "application/json";
+                }
+            }
+            else
+            {
+                response.StatusCode = HttpStatusCode.NotFound;
             };
 
-            response = resultModel.jsonModel;
-
-           return response;
+            return response;
         }
 
-
-        private Response processRequest(DynamicDictionary parameters, RequestDetails requestDetails, Func<DataModel, DataModel> dataStorageDelegate, Func<DataModel, RequestDetails, Response> responseDelegate)
+        private Response processRequest(DynamicDictionary parameters, RequestDetails requestDetails, 
+            Func<DataModel, DataModel> dataStorageDelegate, Func<DataModel, RequestDetails, Response> responseDelegate)
         {
             var reqDataModel = new DataModel() { Path = Request.Path };
             var response = new Response();
@@ -84,8 +90,8 @@ namespace NancyRAMLMock
                 string lastParName = requestDetails.Parameters.Last();                                  //we are assuming that the last parameter in request path is an "id" 
                 string lastParValue = parameters[lastParName].Value;                                    //and we can use this parameter name and value to compose json filter for our dataStorage        
 
-                reqDataModel.Path.Remove(reqDataModel.Path.Length - lastParValue.Length);                     //remove last parameter value from the "/movies/101" => "/movies/", where 101 is some "id"
-                reqDataModel.jsonQuery = $"{{\"{lastParName}\":\"{lastParValue}\"}}";                      // {"lastParameterName":"lastParameterValue"}
+                reqDataModel.Path = reqDataModel.Path.Remove(reqDataModel.Path.Length - lastParValue.Length);                     //remove last parameter value from the "/movies/101" => "/movies/", where 101 is some "id"
+                reqDataModel.jsonQuery = $"{{\"{lastParName}\":\"{lastParValue}\"}}";                                             // {"lastParameterName":"lastParameterValue"}
             }
 
             
