@@ -8,7 +8,7 @@ namespace NancyRAMLMock
 {
     public class Program
     {
-        static void Main(string[] args)
+        public static void Main(string[] args)
         {
             ILogger logger = LogManager.GetLogger(Configuration.LoggerName);
 
