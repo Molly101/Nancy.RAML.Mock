@@ -15,7 +15,5 @@ An URI for the Mock service to listen on will be extracted from RAML "baseUri" p
 
 ## Details
 
-Applica
-
 
 
