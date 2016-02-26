@@ -87,6 +87,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ConfigurationJson.cs" />
     <Compile Include="Data\BsonDocumentExtension.cs" />
     <Compile Include="Data\DataModelExtension.cs" />
     <Compile Include="Nancy\Bootstrapper.cs" />
@@ -626,6 +627,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="packages.config" />
+    <None Include="Program.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="test.raml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

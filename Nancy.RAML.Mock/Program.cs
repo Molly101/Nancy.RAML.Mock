@@ -1,5 +1,6 @@
 ﻿using Nancy.Hosting.Self;
 using NancyRAMLMock.RAMLParsing;
+using Newtonsoft.Json;
 using NLog;
 using System;
 using System.IO;
@@ -10,56 +11,51 @@ namespace NancyRAMLMock
     {
         public static void Main(string[] args)
         {
-            ILogger logger = LogManager.GetLogger(Configuration.LoggerName);
+            var logger = LogManager.GetLogger("ServerStartup");
 
-            if (args.Length == 1 && !String.IsNullOrEmpty(args[0]))
-                Configuration.RAMLFilePath = args[0];
-
-            if (!File.Exists(Configuration.RAMLFilePath))
-            {
-                var ex = new FileNotFoundException($"Could not find the specified RAML file \"{Configuration.RAMLFilePath}\"!");
-
-                logger.Error(ex);
-                throw ex;
-            }
-
-            if (args.Length == 2 && !String.IsNullOrEmpty(args[1]))
-                Configuration.ConnectionString = args[1];
-
-            //Open and parse RAML file
-            Uri nancyUri = null;
             try
             {
-                IRamlDocument ramlDoc = new RamlDocWrapper(Configuration.RAMLFilePath);
-                nancyUri = ramlDoc.BaseUri;
+                LoadApplicationConfiguration(args);
             }
-            catch (Exception ex)
+            catch(Exception ex) when (ex is FileNotFoundException || ex is InvalidOperationException || ex is JsonReaderException) 
             {
-                logger.Error("RAML parser caused an exception!");
+                logger.Error("Cannot load configuration file!");
                 logger.Error(ex);
-                throw;
+                return;
             }
+
+            logger.Info($"Using {Configuration.ConfigFileName} configuration file.");
+
+            //Open and parse RAML file
+            Uri nancyUri = new Uri(Configuration.MockUri);
 
             //Starting Nancy self-hosted process
             HostConfiguration nancyConfig = new HostConfiguration() { RewriteLocalhost = false };
-            NancyHost host = null;
-            try
+            using(var host = new NancyHost(nancyConfig, nancyUri))
             {
-                host = new NancyHost(nancyConfig, nancyUri);
                 host.Start();
                 logger.Info($"Nancy server is listening on \"{nancyUri}\"! Press [anything] Enter to stop the server!!!");
                 Console.ReadLine();
             }
-            catch (Exception ex)
-            {
-                logger.Error("Nancy server startup caused an exception!");
-                logger.Error(ex);
-                throw;
+        }
+
+        public static void LoadApplicationConfiguration(string[] args)
+        {
+            if(args.Length > 1)
+                throw new InvalidOperationException("Invalid command line parameters!");
+
+            if (args.Length == 0)                   // if no file name passed as command line argument - use default
+                args = new[] { "Program.json" };
+
+            if (!String.IsNullOrEmpty(args[0]) && File.Exists(args[0]))
+            { 
+                Configuration.LoadConfiguration(args[0]);
             }
-            finally
+            else
             {
-                host.Stop();
+                throw new FileNotFoundException($"Configuration file {args[0]} not found!");
             }
         }
+
     }
 }
