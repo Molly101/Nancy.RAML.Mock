@@ -87,11 +87,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ConfigurationJson.cs" />
+    <Compile Include="Configuration\ConfigurationJson.cs" />
     <Compile Include="Data\BsonDocumentExtension.cs" />
     <Compile Include="Data\DataModelExtension.cs" />
     <Compile Include="Nancy\Bootstrapper.cs" />
-    <Compile Include="Configuration.cs" />
+    <Compile Include="Configuration\Configuration.cs" />
     <Compile Include="Data\DataModel.cs" />
     <Compile Include="Data\IDataStorage.cs" />
     <Compile Include="Data\MongoDbDataStorage.cs" />

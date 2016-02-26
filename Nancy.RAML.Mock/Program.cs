@@ -26,15 +26,13 @@ namespace NancyRAMLMock
 
             logger.Info($"Using {Configuration.ConfigFileName} configuration file.");
 
-            //Open and parse RAML file
             Uri nancyUri = new Uri(Configuration.MockUri);
-
             //Starting Nancy self-hosted process
             HostConfiguration nancyConfig = new HostConfiguration() { RewriteLocalhost = false };
             using(var host = new NancyHost(nancyConfig, nancyUri))
             {
                 host.Start();
-                logger.Info($"Nancy server is listening on \"{nancyUri}\"! Press [anything] Enter to stop the server!!!");
+                logger.Info($"Nancy server is listening on \"{nancyUri}\". Press [anything] Enter to stop the server!");
                 Console.ReadLine();
             }
         }
