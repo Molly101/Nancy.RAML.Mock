@@ -1,6 +1,6 @@
 ﻿{
   "MockUri": "http://localhost:52109",
-  "RAMLFilePath": "api.raml",
+  "RAMLFilePath": "ApiDescr.raml",
   "MongoConnectionString": "mongodb://localhost:27017",
   "DataBaseName": "NancyRAMLMock"
 }

@@ -14,6 +14,7 @@ namespace NancyRAMLMock
     {
         private static ConfigurationJson configJson = null;
 
+        public static string DefaultFileName { get; } = "ApiConfig.json";
         public static string ConfigFileName { get; private set; }
 
         public static string MockUri => configJson?.MockUri;

@@ -43,7 +43,7 @@ namespace NancyRAMLMock
                 throw new InvalidOperationException("Invalid command line parameters!");
 
             if (args.Length == 0)                   // if no file name passed as command line argument - use default
-                args = new[] { "Program.json" };
+                args = new[] { Configuration.DefaultFileName };
 
             if (!String.IsNullOrEmpty(args[0]) && File.Exists(args[0]))
             { 
