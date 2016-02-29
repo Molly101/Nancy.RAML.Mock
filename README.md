@@ -1,6 +1,6 @@
 # Nancy.RAML.Mock
 
-### C#/.Net application mocking basic REST/JSON server using RAML 0.8 as API definition
+Local HTTP server made with C#/NancyFx that can store (providing JSON schema verification), modify and return sample mock information (models) specified by loaded RAML document. 
 
 ## Usage
 
